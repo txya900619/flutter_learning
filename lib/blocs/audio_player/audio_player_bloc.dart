@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc/bloc.dart';
@@ -15,6 +14,21 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   int _currentIndex;
   AudioPlayer _audioPlayer = AudioPlayer();
 
+  Stream<Duration> get audioPosition  => _audioPlayer.onAudioPositionChanged;
+
+  Future<int> get audioDuration async{
+    await Future.delayed(const Duration(milliseconds: 10));
+    _audioPlayer.onPlayerStateChanged.listen((event) {
+      if(event.index==3){
+        add(End());
+      }
+    });
+   return  _audioPlayer?.getDuration()??Duration();
+  }
+
+  Future<int> seek(position)=>_audioPlayer.seek(position);
+
+
   @override
   Stream<AudioPlayerState> mapEventToState(
     AudioPlayerEvent event,
@@ -29,6 +43,9 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     }else if(event is Resume){
        _audioPlayer.resume();
       yield Playing(_currentIndex);
+    }else if(event is End){
+      _currentIndex = null;
+      yield AudioPlayerInitial();
     }
   }
 }

@@ -12,3 +12,5 @@ class Play extends AudioPlayerEvent{
 class Pause extends AudioPlayerEvent{}
 
 class Resume extends AudioPlayerEvent{}
+
+class End extends AudioPlayerEvent{}
