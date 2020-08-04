@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:test_flutter/blocs/color/color_bloc.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:provider/provider.dart';
+import 'package:test_flutter/mobx/ColorPickerStore/ColorStore.dart';
 
 class ColorPickerCard extends StatelessWidget {
   @override
   Widget build(BuildContext ctx) {
-    return BlocBuilder<ColorBloc, ColorState>(builder: (ctx, state) {
+    final ColorStore colorStore = Provider.of<ColorStore>(ctx, listen: false);
+    return Observer(
+        builder: (_) {
       return Container(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -34,7 +37,7 @@ class ColorPickerCard extends StatelessWidget {
                     mainAxisSpacing: 20,
                     crossAxisSpacing: 20,
                     childAspectRatio: 0.7,
-                    children: state.colorList
+                    children: colorStore.colorList
                         .asMap()
                         .map((index, e) {
                           return MapEntry(
@@ -42,13 +45,13 @@ class ColorPickerCard extends StatelessWidget {
                               GestureDetector(
                                 child: Material(
                                   shape: CircleBorder(
-                                    side: state.colorIndex == index
+                                    side: colorStore.colorIndex == index
                                         ? BorderSide(width: 2)
                                         : BorderSide.none,
                                   ),
                                   child: CircleAvatar(
                                     backgroundColor: e,
-                                    child: state.colorIndex == index
+                                    child: colorStore.colorIndex == index
                                         ? Icon(Icons.touch_app,
                                             color: ThemeData
                                                         .estimateBrightnessForColor(
@@ -60,9 +63,7 @@ class ColorPickerCard extends StatelessWidget {
                                   ),
                                 ),
                                 onTap: () {
-                                  ctx
-                                      .bloc<ColorBloc>()
-                                      .add(ColorSelected(index: index));
+                                  colorStore.select(index);
                                 },
                                 onLongPress: () {
                                   showColorPickerDialog(
@@ -115,9 +116,7 @@ Future<void> showColorPickerDialog(
           FlatButton(
             child: Text("ok"),
             onPressed: () {
-              ctx
-                  .bloc<ColorBloc>()
-                  .add(ColorChanged(index: index, color: _insideColor));
+              Provider.of<ColorStore>(ctx, listen: false).colorChange(index,_insideColor);
               Navigator.of(ctx).pop(null);
             },
           )

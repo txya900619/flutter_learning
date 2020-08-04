@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_flutter/blocs/audio_path_fetch/audio_path_fetch_bloc.dart';
-import 'package:test_flutter/blocs/audio_player/audio_player_bloc.dart';
-import 'package:test_flutter/blocs/bottom_navigation/bottom_navigation_bloc.dart';
-import 'package:test_flutter/blocs/color/color_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:test_flutter/mobx/AudioStore/AudioStore.dart';
+import 'package:test_flutter/mobx/BottomNavigationStore/BottomNavigationStore.dart';
+import 'package:test_flutter/mobx/ColorPickerStore/ColorStore.dart';
 import 'package:test_flutter/screens/home/home_page.dart';
 import 'package:test_flutter/screens/splash_page/splash.dart';
 
 class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiProvider(
       providers: [
-        BlocProvider(create: (ctx) => BottomNavigationBloc()),
-        BlocProvider(create: (ctx) => ColorBloc()),
-        BlocProvider(
-          create: (ctx) =>
-              AudioPathFetchBloc()..add(AudioPathFetchEvent.FetchAudioPath),
-        ),
-        BlocProvider(create: (ctx) => AudioPlayerBloc(ctx.bloc<AudioPathFetchBloc>())),
+        Provider<BottomNavigationStore>(create: (_)=>BottomNavigationStore()),
+        Provider<ColorStore>(create: (_)=>ColorStore(),),
+        Provider<AudioStore>(create: (_)=>AudioStore()..fetchAudioPath(),dispose: (ctx,audioStore)async =>await audioStore.dispose(),),
       ],
       child: MaterialApp(
         title: "ccTest",

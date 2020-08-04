@@ -1,8 +1,9 @@
 import 'package:flushbar/flushbar_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_flutter/blocs/audio_path_fetch/audio_path_fetch_bloc.dart';
-import 'package:test_flutter/blocs/bottom_navigation/bottom_navigation_bloc.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:provider/provider.dart';
+import 'package:test_flutter/mobx/AudioStore/AudioStore.dart';
+import 'package:test_flutter/mobx/BottomNavigationStore/BottomNavigationStore.dart';
 import 'package:test_flutter/screens/home/components/audio_selector.dart';
 import 'package:test_flutter/screens/home/components/color_picker_card.dart';
 import 'package:test_flutter/utils/permission.dart';
@@ -14,13 +15,14 @@ class HomePage extends StatelessWidget {
       onWillPop: () => _onBackEvent(ctx),
       child: Scaffold(
         body: SafeArea(
-          child: BlocBuilder<BottomNavigationBloc, BottomNavigationState>(
-            builder: (ctx, state) {
-              switch (state) {
-                case BottomNavigationState.OnColorPicker:
+          child: Observer(
+            builder: (ctx) {
+              final BottomNavigationStore bottomNavigationStore = Provider.of<BottomNavigationStore>(ctx, listen: false);
+              switch (bottomNavigationStore.currentPage) {
+                case HomePageChild.ColorPicker:
                   return ColorPickerCard();
                   break;
-                case BottomNavigationState.OnAudioSelector:
+                case HomePageChild.AudioSelector:
                   return AudioSelector();
                   break;
                 default:
@@ -30,10 +32,10 @@ class HomePage extends StatelessWidget {
           ),
         ),
         bottomNavigationBar:
-            BlocBuilder<BottomNavigationBloc, BottomNavigationState>(
-          builder: (ctx, state) {
+            Observer(
+          builder: (_) {
             return BottomNavigationBar(
-              currentIndex: state.index,
+              currentIndex: Provider.of<BottomNavigationStore>(ctx, listen: false).currentPage.index,
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
                     icon: Icon(Icons.color_lens), title: Text("ColorPicker")),
@@ -42,12 +44,11 @@ class HomePage extends StatelessWidget {
                     title: Text("AudioSelector")),
               ],
               onTap: (int index) async {
+                final AudioStore audioStore = Provider.of<AudioStore>(ctx, listen: false);
                 if (index == 1) {
-                  if(ctx.bloc<AudioPathFetchBloc>().state is AudioPathFetchFailed){
+                  if(audioStore.audioPathFetchState == AudioPathFetchState.FetchFailed){
                       if (await checkStoragePermission()) {
-                        ctx
-                            .bloc<AudioPathFetchBloc>()
-                            .add(AudioPathFetchEvent.FetchAudioPath);
+                        audioStore.fetchAudioPath();
                       } else {
                         FlushbarHelper.createError(
                           message: "Can't read file",
@@ -57,9 +58,7 @@ class HomePage extends StatelessWidget {
 
                   }
                 }
-                ctx
-                    .bloc<BottomNavigationBloc>()
-                    .add(BottomNavigationEvent.values[index]);
+                Provider.of<BottomNavigationStore>(ctx, listen: false).changeHomePageTo(HomePageChild.values[index]);
               },
             );
           },
